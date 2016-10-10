@@ -8,7 +8,7 @@ static void help()
 	std::string hotkeys =
 		"\n\nHot keys: \n"
 		"\tESC - quit the program\n"
-		"\tt - toggle mode\n"
+		"\tt - toggle compute mode [MODE_DP/MODE_MIN]\n"
 		"\tp - pause video\n";
 
 	std::cout << hotkeys;
@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
 			for (int v = bounds[u]; v < left.rows; v++)
 				draw.at<cv::Vec4b>(v, u) += cv::Vec4b(0, 0, 255, 0);
 
-		cv::imshow("result", draw);
-		cv::imshow("disp", disp / 64);
+		cv::imshow("free space", draw);
+		cv::imshow("dispality", disp / 64);
 
 		cv::normalize(freespace.score_, freespace.score_, 0, 1, cv::NORM_MINMAX);
 		cv::imshow("score", freespace.score_);

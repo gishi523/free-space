@@ -59,28 +59,29 @@ namespace {
 		}
 	}
 
-	void freeSpacePathDP(const cv::Mat& disp, cv::Mat& score, std::vector<int>& path,
+	void freeSpacePathDP(const cv::Mat& disp, const cv::Mat& score, std::vector<int>& path,
 		float P1, float P2, int vt = 0)
 	{
 
-		cv::Mat pathimg = cv::Mat::zeros(score.size(), CV_32S);
+		cv::Mat dpscore = score.clone();
+		cv::Mat pathimg = cv::Mat::zeros(dpscore.size(), CV_32S);
 
 		// forward path
-		for (int u = 1; u < score.cols; u++)
+		for (int u = 1; u < dpscore.cols; u++)
 		{
-			for (int v = vt; v < score.rows; v++)
+			for (int v = vt; v < dpscore.rows; v++)
 			{
 				float minscore = FLT_MAX;
 				int minpath = 0;
 
 				int vvt = std::max(v - 2, vt);
-				int vvb = std::min(v + 2, score.rows);
+				int vvb = std::min(v + 2, dpscore.rows);
 
 				for (int vv = vvt; vv < vvb; vv++)
 				{
 					float jump = fabsf(disp.at<float>(vv, u - 1) - disp.at<float>(v, u));
 					float penalty = std::min(P1 * jump, P1 * P2);
-					float s = score.at<float>(vv, u - 1) + penalty;
+					float s = dpscore.at<float>(vv, u - 1) + penalty;
 					if (s < minscore)
 					{
 						minscore = s;
@@ -88,23 +89,23 @@ namespace {
 					}
 				}
 
-				score.at<float>(v, u) += minscore;
+				dpscore.at<float>(v, u) += minscore;
 				pathimg.at<int>(v, u) = minpath;
 			}
 		}
 
 		// backward path
-		path.resize(score.cols);
+		path.resize(dpscore.cols);
 		float minscore = FLT_MAX;
 		int minv = 0;
-		for (int v = vt; v < score.rows; v++)
+		for (int v = vt; v < dpscore.rows; v++)
 		{
-			if (score.at<float>(v, score.cols - 1) == SCORE_INV)
+			if (dpscore.at<float>(v, dpscore.cols - 1) == SCORE_INV)
 				continue;
 
-			if (score.at<float>(v, score.cols - 1) < minscore)
+			if (dpscore.at<float>(v, dpscore.cols - 1) < minscore)
 			{
-				minscore = score.at<float>(v, score.cols - 1);
+				minscore = dpscore.at<float>(v, dpscore.cols - 1);
 				minv = v;
 			}
 		}
