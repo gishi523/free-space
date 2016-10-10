@@ -1,6 +1,8 @@
 free-space
 ====
 
+![free space](https://dl.dropboxusercontent.com/u/36775496/freespace.png)
+
 ## 概要
 - [1]を参考にfree space computationを実装したものです
 - ステレオ視差画像からfree space(走行可能領域)を計算します
