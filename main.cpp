@@ -3,6 +3,17 @@
 #include <opencv2/opencv.hpp>
 #include "freespace.h"
 
+static void help()
+{
+	std::string hotkeys =
+		"\n\nHot keys: \n"
+		"\tESC - quit the program\n"
+		"\tt - toggle mode\n"
+		"\tp - pause video\n";
+
+	std::cout << hotkeys;
+}
+
 int main(int argc, char *argv[])
 {
 	if (argc < 4)
@@ -32,7 +43,9 @@ int main(int argc, char *argv[])
 	float tilt = node["Tilt"];
 
 	FreeSpace freespace(fu, fv, u0, v0, baseline, height, tilt);
+	int mode = FreeSpace::MODE_DP;
 
+	help();
 	for (int frameno = 1;; frameno++)
 	{
 		char bufl[256], bufr[256];
@@ -74,7 +87,7 @@ int main(int argc, char *argv[])
 
 		// calculate free space
 		std::vector<int> bounds;
-		freespace.compute(disp, bounds, 1, 1);
+		freespace.compute(disp, bounds, 1, 1, mode);
 
 		// draw free space
 		cv::Mat draw;
@@ -94,6 +107,8 @@ int main(int argc, char *argv[])
 			break;
 		if (c == 'p')
 			cv::waitKey(0);
+		if (c == 't')
+			mode = !mode;
 	}
 
 	return 0;
