@@ -1,12 +1,13 @@
 #include <iostream>
+#include <fstream>
 #include <opencv2/opencv.hpp>
 #include "freespace.h"
 
 int main(int argc, char *argv[])
 {
-	if (argc < 3)
+	if (argc < 4)
 	{
-		std::cout << "usage: " << argv[0] << " left-image-format right-image-format [camera.dat]" << std::endl;
+		std::cout << "usage: " << argv[0] << " left-image-format right-image-format camera.xml" << std::endl;
 		return -1;
 	}
 
@@ -14,13 +15,22 @@ int main(int argc, char *argv[])
 	cv::Ptr<cv::StereoSGBM> ssgbm = cv::StereoSGBM::create(0, 64, wsize, 8 * wsize * wsize, 32 * wsize * wsize);
 
 	// input camera parameters
-	float fu = 1267.485352f;
-	float fv = 1224.548950f;
-	float u0 = 472.735474f;
-	float v0 = 175.787781f;
-	float baseline = 0.214382f;
-	float height = 1.170000f;
-	float tilt = 0.081276f;
+	cv::FileStorage cvfs(argv[3], CV_STORAGE_READ);
+	if (!cvfs.isOpened())
+	{
+		std::cerr << "open camera.xml failed." << std::endl;
+		return -1;
+	}
+
+	cv::FileNode node(cvfs.fs, NULL);
+	float fu = node["FocalLengthX"];
+	float fv = node["FocalLengthY"];
+	float u0 = node["CenterX"];
+	float v0 = node["CenterY"];
+	float baseline = node["BaseLine"];
+	float height = node["Height"];
+	float tilt = node["Tilt"];
+
 	FreeSpace freespace(fu, fv, u0, v0, baseline, height, tilt);
 
 	for (int frameno = 1;; frameno++)
