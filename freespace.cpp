@@ -56,18 +56,23 @@ namespace {
 	}
 }
 
-void FreeSpace::compute(const cv::Mat& disp, std::vector<int>& bounds)
+FreeSpace::FreeSpace(float fu, float fv, float u0, float v0, float baseline, float camerah, float tilt)
+	: fu_(fu), fv_(fv), u0_(u0), v0_(v0), baseline_(baseline), camerah_(camerah), tilt_(tilt)
+{
+}
+
+void FreeSpace::compute(const cv::Mat& disp, std::vector<int>& bounds, float paramO, float paramR)
 {
 	CV_Assert(disp.type() == CV_32F);
-
+	
 	// calculate road disparity
 	std::vector<float> roaddisp(disp.rows);
 	for (int v = 0; v < disp.rows; v++)
-		roaddisp[v] = (baseline / camerah) * (fu * sinf(tilt) + v * cosf(tilt));
+		roaddisp[v] = (baseline_ / camerah_) * (fu_ * sinf(tilt_) + v * cosf(tilt_));
 
 	// calculate score image
-	freeSpaceScore(disp, roaddisp, score, fu, fv, baseline, camerah, paramO, paramR);
+	freeSpaceScore(disp, roaddisp, score_, fu_, fv_, baseline_, camerah_, paramO, paramR);
 
 	// extract the optimal free space path
-	freeSpacePath(score, bounds);
+	freeSpacePath(score_, bounds);
 }
