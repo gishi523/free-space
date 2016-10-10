@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 				draw.at<cv::Vec4b>(v, u) += cv::Vec4b(0, 0, 255, 0);
 
 		cv::imshow("free space", draw);
-		cv::imshow("dispality", disp / 64);
+		cv::imshow("disparity", disp / 64);
 
 		cv::normalize(freespace.score_, freespace.score_, 0, 1, cv::NORM_MINMAX);
 		cv::imshow("score", freespace.score_);
