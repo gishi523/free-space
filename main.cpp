@@ -10,7 +10,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	cv::Ptr<cv::StereoSGBM> ssgbm = cv::StereoSGBM::create(0, 64, 11, 20, 100);
+	int wsize = 11;
+	cv::Ptr<cv::StereoSGBM> ssgbm = cv::StereoSGBM::create(0, 64, wsize, 8 * wsize * wsize, 32 * wsize * wsize);
 
 	// input camera parameters
 	float fu = 1267.485352f;
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
 
 		// calculate free space
 		std::vector<int> bounds;
-		freespace.compute(disp, bounds, 0, 1);
+		freespace.compute(disp, bounds, 1, 1);
 
 		// draw free space
 		cv::Mat draw;
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
 
 		cv::imshow("result", draw);
 		cv::imshow("disp", disp / 64);
-		
+
 		cv::normalize(freespace.score_, freespace.score_, 0, 1, cv::NORM_MINMAX);
 		cv::imshow("score", freespace.score_);
 

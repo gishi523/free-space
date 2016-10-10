@@ -10,6 +10,7 @@ namespace {
 	{
 		score.create(disp.size(), CV_32F);
 
+		// skip calculation if dispaliry is negative
 		int vt = 0;
 		for (int v = disp.rows - 1; v >= 0; v--)
 		{
@@ -38,7 +39,9 @@ namespace {
 					objectscore += disp.at<float>(v, u) > 0.f ? fabsf(disp.at<float>(v, u) - roaddisp[vb]) : SCORE_DEFAULT;
 
 				// calculate the road score
-				float roadscore = disp.at<float>(vb, u) > 0.f ? fabsf(disp.at<float>(vb, u) - roaddisp[vb]) : SCORE_DEFAULT;
+				float roadscore = 0.f;
+				for (int v = vb; v < disp.rows-50; v++)
+					roadscore += disp.at<float>(v, u) > 0.f ? fabsf(disp.at<float>(v, u) - roaddisp[v]) : SCORE_DEFAULT;
 
 				score.at<float>(vb, u) = paramO * objectscore + paramR * roadscore;
 			}
@@ -73,14 +76,14 @@ FreeSpace::FreeSpace(float fu, float fv, float u0, float v0, float baseline, flo
 void FreeSpace::compute(const cv::Mat& disp, std::vector<int>& bounds, float paramO, float paramR)
 {
 	CV_Assert(disp.type() == CV_32F);
-	
+
 	// calculate road disparity
 	std::vector<float> roaddisp(disp.rows);
 	for (int v = disp.rows - 1; v >= 0; v--)
 		roaddisp[v] = (baseline_ / camerah_) * (fu_ * sinf(tilt_) + (v - v0_) * cosf(tilt_));
 
 	// calculate score image
-	freeSpaceScore(disp, roaddisp, score_, fu_, fv_, baseline_, 0.5f, paramO, paramR);
+	freeSpaceScore(disp, roaddisp, score_, fu_, fv_, baseline_, 0.3f, paramO, paramR);
 
 	// extract the optimal free space path
 	freeSpacePath(score_, bounds);
