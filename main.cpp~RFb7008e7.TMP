@@ -1,0 +1,10 @@
+#include <iostream>
+
+int main(int argc, char *argv[])
+{
+	if (argc < 4)
+	{
+		std::cout << "Usage: " << argv[0] << " left-image-format right-image-format [camera.dat]" << std::endl;
+	}
+	return 0;
+}
