@@ -29,7 +29,7 @@ namespace {
 
 				// calculate the road score
 				float roadscore = 0.f;
-				for (int v = vb; v < disp.rows-50; v++)
+				for (int v = vb; v < disp.rows - 50; v++)
 					roadscore += disp.at<float>(v, u) > 0.f ? fabsf(disp.at<float>(v, u) - roaddisp[v]) : SCORE_DEFAULT;
 
 				score.at<float>(vb, u) = paramO * objectscore + paramR * roadscore;
@@ -128,7 +128,7 @@ void FreeSpace::compute(const cv::Mat& disp, std::vector<int>& bounds, float par
 
 	// calculate road disparity
 	std::vector<float> roaddisp(disp.rows);
-	for (int v = disp.rows - 1; v >= 0; v--)
+	for (int v = 0; v < disp.rows; v++)
 		roaddisp[v] = (baseline_ / camerah_) * (fu_ * sinf(tilt_) + (v - v0_) * cosf(tilt_));
 
 	// search v from which road dispaliry becomes negative
