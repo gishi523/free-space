@@ -73,10 +73,6 @@ int main(int argc, char *argv[])
 			for (int v = bounds[u]; v < left.rows; v++)
 				draw.at<cv::Vec4b>(v, u) += cv::Vec4b(0, 0, 255, 0);
 
-		/*for (int i = 0; i < disp.rows; i++)
-			for (int j = 0; j < disp.cols; j++)
-				if (disp.at<float>(i, j) < 0) draw.at<cv::Vec4b>(i, j) += cv::Vec4b(0, 255, 0, 0);*/
-
 		cv::imshow("result", draw);
 		cv::imshow("disp", disp / 64);
 

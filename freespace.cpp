@@ -6,20 +6,9 @@ namespace {
 	const float SCORE_DEFAULT = 1.f;
 
 	void freeSpaceScore(const cv::Mat& disp, const std::vector<float>& roaddisp, cv::Mat& score,
-		float fu, float fv, float baseline, float objecth, float paramO, float paramR)
+		float fu, float fv, float baseline, float objecth, float paramO, float paramR, int vt = 0)
 	{
 		score.create(disp.size(), CV_32F);
-
-		// skip calculation if dispaliry is negative
-		int vt = 0;
-		for (int v = disp.rows - 1; v >= 0; v--)
-		{
-			if (roaddisp[v] < 0.f)
-			{
-				vt = v + 1;
-				break;
-			}
-		}
 
 		for (int vb = 0; vb < vt; vb++)
 			score.row(vb) = SCORE_INV;
@@ -48,22 +37,81 @@ namespace {
 		}
 	}
 
-	void freeSpacePath(const cv::Mat& score, std::vector<int>& path)
+	void freeSpacePath(const cv::Mat& score, std::vector<int>& path, int vt = 0)
 	{
 		path.resize(score.cols);
 		for (int u = 0; u < score.cols; u++)
 		{
 			float minscore = FLT_MAX;
 			int minv = 0;
-			for (int v = 0; v < score.rows; v++)
+			for (int v = vt; v < score.rows; v++)
 			{
-				if (score.at<float>(v, u) != SCORE_INV && score.at<float>(v, u) < minscore)
+				if (score.at<float>(v, u) == SCORE_INV)
+					continue;
+
+				if (score.at<float>(v, u) < minscore)
 				{
 					minscore = score.at<float>(v, u);
 					minv = v;
 				}
 			}
 			path[u] = minv;
+		}
+	}
+
+	void freeSpacePathDP(const cv::Mat& disp, cv::Mat& score, std::vector<int>& path,
+		float P1, float P2, int vt = 0)
+	{
+
+		cv::Mat pathimg = cv::Mat::zeros(score.size(), CV_32S);
+
+		// forward path
+		for (int u = 1; u < score.cols; u++)
+		{
+			for (int v = vt; v < score.rows; v++)
+			{
+				float minscore = FLT_MAX;
+				int minpath = 0;
+
+				int vvt = std::max(v - 2, vt);
+				int vvb = std::min(v + 2, score.rows);
+
+				for (int vv = vvt; vv < vvb; vv++)
+				{
+					float jump = fabsf(disp.at<float>(vv, u - 1) - disp.at<float>(v, u));
+					float penalty = std::min(P1 * jump, P1 * P2);
+					float s = score.at<float>(vv, u - 1) + penalty;
+					if (s < minscore)
+					{
+						minscore = s;
+						minpath = vv;
+					}
+				}
+
+				score.at<float>(v, u) += minscore;
+				pathimg.at<int>(v, u) = minpath;
+			}
+		}
+
+		// backward path
+		path.resize(score.cols);
+		float minscore = FLT_MAX;
+		int minv = 0;
+		for (int v = vt; v < score.rows; v++)
+		{
+			if (score.at<float>(v, score.cols - 1) == SCORE_INV)
+				continue;
+
+			if (score.at<float>(v, score.cols - 1) < minscore)
+			{
+				minscore = score.at<float>(v, score.cols - 1);
+				minv = v;
+			}
+		}
+		for (int u = pathimg.cols - 1; u >= 0; u--)
+		{
+			path[u] = minv;
+			minv = pathimg.at<int>(minv, u);
 		}
 	}
 }
@@ -73,7 +121,7 @@ FreeSpace::FreeSpace(float fu, float fv, float u0, float v0, float baseline, flo
 {
 }
 
-void FreeSpace::compute(const cv::Mat& disp, std::vector<int>& bounds, float paramO, float paramR)
+void FreeSpace::compute(const cv::Mat& disp, std::vector<int>& bounds, float paramO, float paramR, int mode)
 {
 	CV_Assert(disp.type() == CV_32F);
 
@@ -82,9 +130,27 @@ void FreeSpace::compute(const cv::Mat& disp, std::vector<int>& bounds, float par
 	for (int v = disp.rows - 1; v >= 0; v--)
 		roaddisp[v] = (baseline_ / camerah_) * (fu_ * sinf(tilt_) + (v - v0_) * cosf(tilt_));
 
+	// search v from which road dispaliry becomes negative
+	int vt = 0;
+	for (int v = disp.rows - 1; v >= 0; v--)
+	{
+		if (roaddisp[v] < 0.f)
+		{
+			vt = v + 1;
+			break;
+		}
+	}
+
 	// calculate score image
-	freeSpaceScore(disp, roaddisp, score_, fu_, fv_, baseline_, 0.3f, paramO, paramR);
+	freeSpaceScore(disp, roaddisp, score_, fu_, fv_, baseline_, 0.3f, paramO, paramR, vt);
 
 	// extract the optimal free space path
-	freeSpacePath(score_, bounds);
+	if (mode == MODE_DP)
+	{
+		freeSpacePathDP(disp, score_, bounds, 1, 30, vt);
+	}
+	else if (mode == MODE_MIN)
+	{
+		freeSpacePath(score_, bounds, vt);
+	}
 }
