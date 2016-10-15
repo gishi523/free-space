@@ -155,6 +155,7 @@ void FreeSpace::compute(const cv::Mat& disp, std::vector<int>& bounds, float par
 		}
 	}
 
+	// transpose for efficient memory access
 	cv::Mat dispt = disp.t();
 
 	// calculate score image
