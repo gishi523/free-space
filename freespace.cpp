@@ -15,21 +15,17 @@ namespace {
 
 		int V = disp.cols - 50;
 
-		// make integral image
-		cv::Mat integral;
-		integral.create(disp.size(), CV_32F);
-		for (int u = 0; u < disp.rows; u++)
-		{
-			integral.at<float>(u, vt) = disp.at<float>(u, vt) > 0.f ? fabsf(disp.at<float>(u, vt) - roaddisp[vt]) : SCORE_DEFAULT;
-			for (int v = vt + 1; v < disp.cols; v++)
-			{
-				integral.at<float>(u, v) = integral.at<float>(u, v - 1)
-					+ (disp.at<float>(u, v) > 0.f ? fabsf(disp.at<float>(u, v) - roaddisp[v]) : SCORE_DEFAULT);
-			}
-		}
+		std::vector<float> integral(disp.cols);
 
 		for (int u = 0; u < disp.rows; u++)
 		{
+			// make integral image
+			integral[vt] = disp.at<float>(u, vt) > 0.f ? fabsf(disp.at<float>(u, vt) - roaddisp[vt]) : SCORE_DEFAULT;
+			for (int v = vt + 1; v < disp.cols; v++)
+			{
+				integral[v] = integral[v - 1] + (disp.at<float>(u, v) > 0.f ? fabsf(disp.at<float>(u, v) - roaddisp[v]) : SCORE_DEFAULT);
+			}
+
 			for (int vb = vt; vb < disp.cols; vb++)
 			{
 				// calculate the number of pixels to determine the object score
@@ -43,7 +39,7 @@ namespace {
 					objectscore += disp.at<float>(u, v) > 0.f ? fabsf(disp.at<float>(u, v) - roaddisp[vb]) : SCORE_DEFAULT;
 
 				// calculate the road score
-				float roadscore = integral.at<float>(u, V - 1) - integral.at<float>(u, vb - 1);
+				float roadscore = integral[V - 1] - integral[vb - 1];
 				roadscore = std::max(roadscore, 0.f);
 				score.at<float>(u, vb) = paramO * objectscore + paramR * roadscore;
 			}
