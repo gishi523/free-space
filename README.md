@@ -8,7 +8,7 @@ free-space
 - ステレオ視差画像からfree space(走行可能領域)を計算します
 
 ## 参考
-- [1] D. Pfeiffer, U.Franke: "Towards a Global Optimal Multi-Layer Stixel Representation of Dense 3D Data", British Machine Vision Conference, August 2011
+- [1] D. Pfeiffer, U. Franke: “Efficient Representation of Traffic Scenes by means of Dynamic Stixels”, IEEE Intelligent Vehicles Symposium IV 2010, San Diego, CA, Juni 2010
 
 ## Requirement
 - OpenCVが必要です
